@@ -254,7 +254,7 @@ function addMessage(text, role) {
     styleBtn.textContent = '换风格';
     styleBtn.addEventListener('click', () => {
       cycleStyle();
-      generate();
+      generate(false);
     });
     btns.appendChild(styleBtn);
 
@@ -275,14 +275,16 @@ function cycleStyle() {
   });
 }
 
-async function generate() {
+async function generate(showUser = true) {
   const content = textarea.value.trim();
   if (!content) return;
 
   genBtn.disabled = true;
 
-  const preview = content.length > 60 ? content.slice(0, 60) + '...' : content;
-  addMessage(preview, 'user');
+  if (showUser) {
+    const preview = content.length > 60 ? content.slice(0, 60) + '...' : content;
+    addMessage(preview, 'user');
+  }
 
   const loadingDiv = document.createElement('div');
   loadingDiv.className = 'msg ai loading';
