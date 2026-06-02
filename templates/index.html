@@ -81,7 +81,8 @@
   .comment-bar textarea::placeholder { color: var(--text-muted); font-size: 14px; }
   .clear-btn {
     position: absolute; top: 0; right: 0;
-    width: 26px; height: 26px; border: none;
+    width: 26px; height: 26px;
+    border: 1px solid transparent;
     background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.3);
     font-size: 14px; cursor: pointer; border-radius: 0;
     display: none; align-items: center; justify-content: center;
@@ -89,8 +90,7 @@
   }
   .clear-btn:hover {
     background: var(--gold-dim); color: var(--gold);
-    border-left: 1px solid var(--gold);
-    border-bottom: 1px solid var(--gold);
+    border-color: var(--gold);
   }
   .clear-btn.visible { display: flex; }
   .actions { display: flex; gap: 6px; align-items: center; }
