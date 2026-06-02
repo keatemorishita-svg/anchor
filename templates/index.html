@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>AI 文案工作室</title>
+<title>Anchor · 评论区建联</title>
 <style>
   :root {
     --bg: #080808;
@@ -13,810 +13,223 @@
     --text-muted: #8e8878;
     --gold: #d4b85c;
     --gold-dim: rgba(212, 184, 92, 0.12);
-    --serif: 'Times New Roman', 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { height: 100%; overflow: hidden; }
-  .hidden { display: none !important; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-user-select: none;
-    user-select: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg); color: var(--text); height: 100%;
+    display: flex; flex-direction: column; overflow: hidden;
+    max-width: 480px; margin: 0 auto;
+    border-left: 1px solid var(--border); border-right: 1px solid var(--border);
   }
 
-  /* ── header ── */
   .header {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    background: var(--bg);
-    min-height: 44px;
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
   }
-  .header .logo {
-    font-family: var(--serif);
-    font-size: 1.15rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: var(--gold);
-  }
+  .header .logo { font-size: 1.2rem; font-weight: 700; color: var(--gold); letter-spacing: 0.04em; }
   .header .badge {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    border: 1px solid rgba(212, 184, 92, 0.2);
-    border-radius: 99px;
-    padding: 2px 10px;
-    letter-spacing: 0.06em;
+    font-size: 0.7rem; color: var(--text-muted);
+    border: 1px solid rgba(212,184,92,0.2); border-radius: 99px; padding: 2px 10px;
   }
 
-  /* ── control panel ── */
-  .controls {
-    flex-shrink: 0;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-    transition: all 0.3s;
-  }
-  .controls-body {
-    transition: all 0.3s;
-    overflow: hidden;
-  }
-  .controls.collapsed .controls-body { max-height: 0; opacity: 0; }
-  .controls-body { max-height: 600px; opacity: 1; }
-
-  /* ── dimension row ── */
-  .dim-row {
-    display: flex;
-    align-items: center;
-    padding: 0 8px;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-  }
-  .dim-row.hidden { display: none; }
-  .dim-tag {
-    font-family: var(--serif);
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 0.08em;
-    width: 36px;
-    flex-shrink: 0;
-    text-align: right;
-    padding-right: 8px;
-  }
-  .dim-options {
-    display: flex;
-    flex: 1;
-    gap: 0;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .dim-options::-webkit-scrollbar { display: none; }
-
-  .dim-chip {
-    flex: 1 0 auto;
-    min-width: 62px;
-    padding: 8px 6px 6px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    border-bottom: 2px solid transparent;
-  }
-  .dim-chip:active { background: rgba(212, 184, 92, 0.06); }
-  .dim-chip.active { border-bottom-color: var(--gold); }
-  .dim-chip .icon { font-size: 1.2rem; display: block; line-height: 1.2; }
-  .dim-chip .name { font-size: 12px; font-weight: 500; display: block; color: var(--text-muted); }
-  .dim-chip.active .name { color: var(--text); }
-
-  /* ── mood row ── */
-  .mood-row {
-    display: flex;
-    align-items: center;
-    padding: 6px 8px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    gap: 4px;
-  }
-  .mood-row::-webkit-scrollbar { display: none; }
-  .mood-chip {
-    flex-shrink: 0;
-    padding: 6px 12px;
-    font-size: 13px;
-    color: var(--text-muted);
-    border: 1px solid transparent;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.15s;
-    min-height: 36px;
-    display: flex;
-    align-items: center;
-  }
-  .mood-chip:active { color: var(--text); }
-  .mood-chip.active { color: var(--gold); border-bottom: 1px solid var(--gold); }
-
-  /* ── controls toggle bar ── */
-  .controls-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 14px;
-    cursor: pointer;
-    min-height: 36px;
-    border-top: 1px solid rgba(255,255,255,0.03);
-  }
-  .controls-toggle .summary {
-    font-size: 12px;
-    color: var(--text-muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    flex: 1;
-  }
-  .controls-toggle .arrow {
-    font-size: 12px;
-    color: var(--text-muted);
-    transition: transform 0.3s;
-    flex-shrink: 0;
-    margin-left: 8px;
-  }
-  .controls.collapsed .controls-toggle .arrow { transform: rotate(180deg); }
-
-  .gold-rule {
-    height: 1px;
-    border: none;
-    background: linear-gradient(90deg, transparent, rgba(200,164,78,0.4), transparent);
-    margin: 0 12px;
-  }
-
-  /* ── messages ── */
   .messages {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 12px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex: 1; overflow-y: auto; padding: 12px 10px;
+    display: flex; flex-direction: column; gap: 10px;
   }
   .msg {
-    max-width: 88%;
-    padding: 14px 16px;
-    font-size: 16px;
-    line-height: 1.65;
-    white-space: pre-wrap;
-    word-break: break-word;
+    max-width: 88%; padding: 14px 16px; font-size: 16px; line-height: 1.65;
+    white-space: pre-wrap; word-break: break-word;
   }
   .msg.user {
-    align-self: flex-end;
-    background: #111;
-    border-right: 2px solid rgba(200, 164, 78, 0.35);
+    align-self: flex-end; background: #111;
+    border-right: 2px solid rgba(200,164,78,0.35);
   }
   .msg.ai {
-    align-self: flex-start;
-    background: #0c0c0c;
+    align-self: flex-start; background: #0c0c0c;
     border: 1px solid var(--border);
   }
-  .msg .meta {
-    font-family: var(--serif);
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-    letter-spacing: 0.04em;
-  }
-  .msg .btns {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
+  .msg .btns { display: flex; gap: 8px; margin-top: 10px; }
   .msg .copy-btn, .msg .style-btn {
-    display: block;
-    flex: 1;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    background: none;
-    padding: 10px 0;
-    text-align: center;
-    letter-spacing: 0.04em;
-    transition: all 0.15s;
-    min-height: 44px;
+    flex: 1; font-size: 13px; font-weight: 600; cursor: pointer;
+    background: none; padding: 10px 0; text-align: center; min-height: 44px;
   }
-  .msg .copy-btn {
-    color: #f0d878;
-    border: 1px solid rgba(212, 184, 92, 0.4);
-  }
-  .msg .copy-btn:active { background: var(--gold-dim); border-color: var(--gold); }
-  .msg .style-btn {
-    color: var(--text-muted);
-    border: 1px solid rgba(255,255,255,0.12);
-  }
-  .msg .style-btn:active { background: rgba(255,255,255,0.04); border-color: var(--text-muted); }
+  .msg .copy-btn { color: #f0d878; border: 1px solid rgba(212,184,92,0.4); }
+  .msg .copy-btn:active { background: var(--gold-dim); }
+  .msg .style-btn { color: var(--text-muted); border: 1px solid rgba(255,255,255,0.12); }
+  .msg .style-btn:active { background: rgba(255,255,255,0.04); }
   .msg.loading { opacity: 0.4; }
-  .msg.error { color: #c07860; border-color: rgba(192, 120, 96, 0.2); }
-
-  /* ── summary card (content analysis) ── */
-  .msg.summary-card {
-    border: 1px solid rgba(212, 184, 92, 0.25);
-    background: rgba(212, 184, 92, 0.04);
-    font-size: 14px;
-  }
-  .msg.summary-card .s-label {
-    color: var(--gold);
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    margin-bottom: 2px;
-  }
-  .msg.summary-card .s-value {
-    color: var(--text);
-    margin-bottom: 8px;
-  }
-  .msg.summary-card .s-value:last-child { margin-bottom: 0; }
-  .msg.summary-card .s-kp {
-    color: var(--text-muted);
-    font-size: 13px;
-    margin-left: 8px;
-    margin-bottom: 2px;
+  .msg.error { color: #c07860; border-color: rgba(192,120,96,0.2); }
+  .empty {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); font-size: 14px; text-align: center;
   }
 
-  .empty-state {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
-    gap: 6px;
-    font-size: 14px;
-    text-align: center;
-  }
-
-  /* ── comment bar (compact mode) ── */
   .comment-bar {
-    flex-shrink: 0;
-    background: var(--bg);
-    border-top: 1px solid var(--border);
-    padding: 8px 12px;
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex-shrink: 0; background: var(--bg); border-top: 1px solid var(--border);
+    padding: 8px 12px; padding-bottom: max(8px, env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; gap: 8px;
   }
-  .comment-bar.hidden { display: none; }
   .textarea-wrap { position: relative; }
   .comment-bar textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--border);
-    background: var(--bg-card);
-    color: var(--text);
-    font-size: 15px;
-    font-family: inherit;
-    outline: none;
-    resize: none;
-    line-height: 1.5;
+    width: 100%; padding: 10px; border: 1px solid var(--border);
+    background: var(--bg-card); color: var(--text); font-size: 15px;
+    font-family: inherit; outline: none; resize: none; line-height: 1.5;
   }
   .comment-bar textarea:focus { border-color: var(--gold); }
   .comment-bar textarea::placeholder { color: var(--text-muted); font-size: 14px; }
-  .clear-textarea {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 28px;
-    height: 28px;
-    border: none;
-    background: rgba(255,255,255,0.08);
-    color: var(--text-muted);
-    font-size: 16px;
-    cursor: pointer;
-    border-radius: 50%;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    padding: 0;
+  .clear-btn {
+    position: absolute; top: 8px; right: 8px;
+    width: 28px; height: 28px; border: none;
+    background: rgba(255,255,255,0.08); color: var(--text-muted);
+    font-size: 16px; cursor: pointer; border-radius: 50%;
+    display: none; align-items: center; justify-content: center;
   }
-  .clear-textarea.visible { display: flex; }
-  .clear-textarea:active { background: rgba(255,255,255,0.15); color: var(--text); }
-  .comment-actions {
-    display: flex;
-    gap: 6px;
-    align-items: center;
+  .clear-btn.visible { display: flex; }
+  .actions { display: flex; gap: 6px; align-items: center; }
+  .drop-wrap { position: relative; flex: 1; min-width: 0; }
+  .drop-btn {
+    padding: 8px 6px; border: 1px solid var(--border);
+    background: var(--bg-card); cursor: pointer; text-align: center;
+    min-height: 42px; display: flex; flex-direction: column; justify-content: center;
   }
-  .cbtn-wrap {
-    position: relative;
-    flex: 1;
-    min-width: 0;
+  .drop-btn:active { border-color: var(--gold); }
+  .drop-btn .dl { font-size: 10px; color: var(--text-muted); letter-spacing: 0.06em; }
+  .drop-btn .dv { font-size: 14px; color: var(--text); margin-top: 1px; }
+  .drop-menu {
+    display: none; position: absolute; bottom: 100%; left: 0;
+    margin-bottom: 4px; background: var(--bg-card); border: 1px solid var(--border);
+    min-width: 100%; z-index: 10;
   }
-  .cbtn {
-    padding: 8px 6px;
-    border: 1px solid var(--border);
-    background: var(--bg-card);
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.15s;
-    user-select: none;
-    min-height: 42px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+  .drop-menu.open { display: block; }
+  .drop-opt {
+    padding: 10px 12px; font-size: 14px; color: var(--text-muted);
+    cursor: pointer; white-space: nowrap; min-height: 40px;
+    display: flex; align-items: center;
   }
-  .cbtn:active { border-color: var(--gold); }
-  .cbtn .cbtn-label {
-    font-size: 10px;
-    color: var(--text-muted);
-    letter-spacing: 0.06em;
+  .drop-opt:active { background: var(--gold-dim); color: var(--text); }
+  .drop-opt.active { color: var(--gold); }
+  .gen-btn {
+    flex-shrink: 0; width: 64px; padding: 10px 0;
+    border: 1px solid var(--gold); background: transparent;
+    color: #f0d878; font-size: 15px; font-weight: 600;
+    cursor: pointer; min-height: 42px; letter-spacing: 0.06em;
   }
-  .cbtn .cbtn-val {
-    font-size: 14px;
-    color: var(--text);
-    margin-top: 1px;
-  }
-  .cdrop {
-    display: none;
-    position: absolute;
-    bottom: 100%;
-    left: 0;
-    margin-bottom: 4px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    min-width: 100%;
-    z-index: 10;
-  }
-  .cdrop.open { display: block; }
-  .cdrop-opt {
-    padding: 10px 12px;
-    font-size: 14px;
-    color: var(--text-muted);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.1s;
-    min-height: 40px;
-    display: flex;
-    align-items: center;
-  }
-  .cdrop-opt:active { background: var(--gold-dim); color: var(--text); }
-  .cdrop-opt.active { color: var(--gold); }
-  .generate-btn {
-    flex-shrink: 0;
-    width: 64px;
-    padding: 10px 0;
-    border: 1px solid var(--gold);
-    background: transparent;
-    color: #f0d878;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    letter-spacing: 0.06em;
-    text-align: center;
-    min-height: 42px;
-    transition: all 0.15s;
-  }
-  .generate-btn:active { background: var(--gold); color: #080808; }
-  .generate-btn:disabled { opacity: 0.2; }
-
-  /* ── input bar (post mode) ── */
-  .tone-select {
-    position: relative;
-    flex-shrink: 0;
-  }
-  .tone-trigger {
-    padding: 10px;
-    font-size: 15px;
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-    background: var(--bg-card);
-    cursor: pointer;
-    white-space: nowrap;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    transition: all 0.15s;
-    user-select: none;
-  }
-  .tone-trigger:active { border-color: var(--gold); color: var(--text); }
-  .tone-dropdown {
-    display: none;
-    position: absolute;
-    bottom: 100%;
-    left: 0;
-    margin-bottom: 4px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    min-width: 140px;
-    z-index: 10;
-  }
-  .tone-dropdown.open { display: block; }
-  .tone-option {
-    padding: 10px 14px;
-    font-size: 14px;
-    color: var(--text-muted);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.1s;
-    min-height: 40px;
-    display: flex;
-    align-items: center;
-  }
-  .tone-option:active { background: var(--gold-dim); color: var(--text); }
-  .tone-option.active { color: var(--gold); }
-
-  /* ── input bar ── */
-  .input-bar {
-    display: flex;
-    gap: 8px;
-    padding: 10px 12px;
-    padding-bottom: max(10px, env(safe-area-inset-bottom));
-    border-top: 1px solid var(--border);
-    background: var(--bg);
-    flex-shrink: 0;
-  }
-  .input-bar input {
-    flex: 1;
-    padding: 10px 0;
-    border: none;
-    border-bottom: 1px solid var(--border);
-    background: transparent;
-    color: var(--text);
-    font-size: 16px;
-    outline: none;
-    font-family: inherit;
-  }
-  .input-bar input:focus { border-color: var(--gold); }
-  .input-bar input::placeholder { color: var(--text-muted); font-size: 15px; }
-  .input-bar input.hidden { display: none; }
-  .tone-select.visible { flex: 1; }
-  .tone-select.visible .tone-trigger { border-color: var(--gold); color: var(--text); }
-  .input-bar button {
-    width: 100px;
-    padding: 10px 0;
-    border: 1px solid var(--gold);
-    background: transparent;
-    color: #f0d878;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    letter-spacing: 0.06em;
-    text-align: center;
-    min-height: 44px;
-    transition: all 0.15s;
-  }
-  .input-bar button:active { background: var(--gold); color: #080808; }
-  .input-bar button:disabled { opacity: 0.2; }
-
-  /* ── desktop ── */
-  @media (min-width: 768px) {
-    body {
-      max-width: 480px;
-      margin: 0 auto;
-      border-left: 1px solid var(--border);
-      border-right: 1px solid var(--border);
-    }
-    .dim-chip { min-width: 72px; padding: 10px 8px 7px; }
-    .dim-chip .icon { font-size: 1.3rem; }
-    .dim-chip .name { font-size: 13px; }
-    .dim-tag { font-size: 11px; width: 44px; }
-    .msg { max-width: 80%; }
-    .header { padding: 14px 18px; }
-    .header .logo { font-size: 1.25rem; }
-  }
+  .gen-btn:active { background: var(--gold); color: #080808; }
+  .gen-btn:disabled { opacity: 0.2; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <span class="logo">Anthcr</span>
-  <span class="badge">评论区神器</span>
-</div>
-
-<div class="controls" id="controls">
-  <div class="controls-body" id="controlsBody">
-  {% for dim_key, dim in dimensions.items() %}
-    <div class="dim-row" data-dim-row="{{ dim_key }}">
-      <span class="dim-tag">{{ dim.label }}</span>
-      <div class="dim-options" data-dim="{{ dim_key }}">
-        {% for opt_key, opt in dim.options.items() %}
-        <div class="dim-chip{% if loop.first %} active{% endif %}" data-key="{{ opt_key }}">
-          <span class="icon">{{ opt.icon }}</span>
-          <span class="name">{{ opt.label }}</span>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-  {% endfor %}
-    <hr class="gold-rule">
-    <div class="mood-row" id="moodBar"></div>
-  </div>
-  <div class="controls-toggle" id="controlsToggle">
-    <span class="summary" id="controlsSummary">20+ 女 · 日常观察 · 记录 · 早上</span>
-    <span class="arrow">▲</span>
-  </div>
+  <span class="logo">Anchor</span>
+  <span class="badge">评论区建联</span>
 </div>
 
 <div class="messages" id="messages">
-  <div class="empty-state">
-    <span style="font-size:2rem">&#9997;</span>
-    <span>选好维度，说说你想发什么</span>
-    <span style="font-size:0.7rem;color:var(--text-muted)">比如"最近在做的项目"或者"给我一个灵感"</span>
-  </div>
+  <div class="empty">粘贴博主内容，生成评论</div>
 </div>
 
-<!-- comment mode: compact bottom bar -->
-<div class="comment-bar hidden" id="commentBar">
+<div class="comment-bar">
   <div class="textarea-wrap">
-    <textarea id="targetContent" placeholder="粘贴对方的视频号内容、文案或链接..." rows="2"></textarea>
-    <button class="clear-textarea" id="clearTextarea" type="button">&times;</button>
+    <textarea id="targetContent" placeholder="粘贴对方的视频号内容、文案..." rows="3"></textarea>
+    <button class="clear-btn" id="clearBtn">&times;</button>
   </div>
-  <div class="comment-actions">
-    <div class="cbtn-wrap" id="purposeWrap">
-      <div class="cbtn" id="purposeBtn"><span class="cbtn-label">目的</span><span class="cbtn-val">回复建联</span></div>
-      <div class="cdrop" id="purposeDrop">
-        <div class="cdrop-opt active" data-val="build_link">回复建联</div>
-        <div class="cdrop-opt" data-val="self_warm">自评暖场</div>
-        <div class="cdrop-opt" data-val="alt_account">小号助评</div>
-      </div>
+  <div class="actions">
+    <div class="drop-wrap" id="typeWrap">
+      <div class="drop-btn" id="typeBtn"><span class="dl">目的</span><span class="dv">建联</span></div>
+      <div class="drop-menu" id="typeMenu"></div>
     </div>
-    <div class="cbtn-wrap" id="styleWrap">
-      <div class="cbtn" id="styleBtn"><span class="cbtn-label">风格</span><span class="cbtn-val">共鸣</span></div>
-      <div class="cdrop" id="styleDrop">
-        <div class="cdrop-opt active" data-val="resonance">共鸣</div>
-        <div class="cdrop-opt" data-val="supplement">补充</div>
-        <div class="cdrop-opt" data-val="question">提问</div>
-        <div class="cdrop-opt" data-val="casual">轻松</div>
-        <div class="cdrop-opt" data-val="professional">专业</div>
-        <div class="cdrop-opt" data-val="restrained">克制</div>
-      </div>
+    <div class="drop-wrap" id="styleWrap">
+      <div class="drop-btn" id="styleBtn"><span class="dl">风格</span><span class="dv">共鸣</span></div>
+      <div class="drop-menu" id="styleMenu"></div>
     </div>
-    <div class="cbtn-wrap" id="toneWrap">
-      <div class="cbtn" id="toneBtn"><span class="cbtn-label">语气</span><span class="cbtn-val">谦逊</span></div>
-      <div class="cdrop" id="toneDrop">
-        <div class="cdrop-opt active" data-val="humble">谦逊</div>
-        <div class="cdrop-opt" data-val="light">轻松</div>
-        <div class="cdrop-opt" data-val="playful">调皮</div>
-        <div class="cdrop-opt" data-val="gentle">温柔</div>
-      </div>
+    <div class="drop-wrap" id="toneWrap">
+      <div class="drop-btn" id="toneBtn"><span class="dl">语气</span><span class="dv">谦逊</span></div>
+      <div class="drop-menu" id="toneMenu"></div>
     </div>
-    <button class="generate-btn" id="generateBtn">生成</button>
+    <button class="gen-btn" id="genBtn">生成</button>
   </div>
-</div>
-
-<!-- post mode: original input bar -->
-<div class="input-bar" id="inputBar">
-  <div class="tone-select" id="toneSelect">
-    <div class="tone-trigger" id="toneTrigger">语气谦逊一点</div>
-    <div class="tone-dropdown" id="toneDropdown">
-      <div class="tone-option active" data-tone="humble">语气谦逊一点</div>
-      <div class="tone-option" data-tone="light">语气轻松一点</div>
-      <div class="tone-option" data-tone="playful">语气调皮一点</div>
-      <div class="tone-option" data-tone="gentle">语气温柔一点</div>
-    </div>
-  </div>
-  <input type="text" id="msgInput" placeholder="说说今天发生了什么..." autofocus>
-  <button id="sendBtn">生成</button>
 </div>
 
 <script>
 const DIMS = {{ dimensions | tojson }};
-const MOODS = {{ moods | tojson }};
+const TONES = {{ tones | tojson }};
 
-const active = {};
-document.querySelectorAll('.dim-options').forEach(bar => {
-  const dimKey = bar.dataset.dim;
-  const firstChip = bar.querySelector('.dim-chip');
-  active[dimKey] = firstChip ? firstChip.dataset.key : '';
-});
-
-let activeMood = '';
-let activeSummary = '';       // stored content analysis
-let lastUserMsg = '';         // for style regeneration
-let controlsCollapsed = false;
-let activeTone = 'humble';    // default tone
-
-// ── controls collapse / expand ──
-const controlsEl = document.getElementById('controls');
-const controlsToggle = document.getElementById('controlsToggle');
-const controlsSummary = document.getElementById('controlsSummary');
-
-function updateControlsSummary() {
-  const parts = [];
-  ['persona', 'scenario', 'purpose', 'rhythm'].forEach(k => {
-    const label = DIMS[k]?.options?.[active[k]]?.label;
-    if (label) parts.push(label);
-  });
-  if (active.mode === 'comment') {
-    const ctLabel = DIMS.comment_type?.options?.[active.comment_type]?.label;
-    const csLabel = DIMS.comment_style?.options?.[active.comment_style]?.label;
-    if (ctLabel) parts.push(ctLabel);
-    if (csLabel) parts.push(csLabel);
-  }
-  controlsSummary.textContent = parts.join(' · ') || '未选择';
-}
-
-function collapseControls() {
-  controlsEl.classList.add('collapsed');
-  controlsCollapsed = true;
-}
-
-function expandControls() {
-  controlsEl.classList.remove('collapsed');
-  controlsCollapsed = false;
-}
-
-controlsToggle.addEventListener('click', () => {
-  if (controlsCollapsed) expandControls();
-  else collapseControls();
-});
-
-// ── dimension chip clicks ──
-const controlsBody = document.getElementById('controlsBody');
-const commentBar = document.getElementById('commentBar');
-const inputBar = document.getElementById('inputBar');
-
-document.querySelectorAll('.dim-chip').forEach(chip => {
-  chip.addEventListener('click', () => {
-    const bar = chip.closest('.dim-options');
-    bar.querySelectorAll('.dim-chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    active[bar.dataset.dim] = chip.dataset.key;
-
-    if (bar.dataset.dim === 'mode') {
-      const isComment = chip.dataset.key === 'comment';
-      // Hide all dim-rows and controls toggle in comment mode
-      controlsBody.classList.toggle('hidden', isComment);
-      controlsToggle.classList.toggle('hidden', isComment);
-      // Swap bottom bars
-      inputBar.classList.toggle('hidden', isComment);
-      commentBar.classList.toggle('hidden', !isComment);
-      activeSummary = '';
-      // Update summary from regular dim chips if not in comment mode
-      if (!isComment) updateControlsSummary();
-    } else if (active.mode !== 'comment') {
-      updateControlsSummary();
-    }
-  });
-});
-
-// ── tone dropdown ──
-const toneSelect = document.getElementById('toneSelect');
-const toneTrigger = document.getElementById('toneTrigger');
-const toneDropdown = document.getElementById('toneDropdown');
-
-toneTrigger.addEventListener('click', (e) => {
-  e.stopPropagation();
-  toneDropdown.classList.toggle('open');
-});
-
-document.querySelectorAll('.tone-option').forEach(opt => {
-  opt.addEventListener('click', (e) => {
-    e.stopPropagation();
-    document.querySelectorAll('.tone-option').forEach(o => o.classList.remove('active'));
-    opt.classList.add('active');
-    activeTone = opt.dataset.tone;
-    toneTrigger.textContent = opt.textContent;
-    toneDropdown.classList.remove('open');
-  });
-});
-
-document.addEventListener('click', () => {
-  toneDropdown.classList.remove('open');
-  document.querySelectorAll('.cdrop.open').forEach(d => d.classList.remove('open'));
-});
-
-// ── initial summary ──
-updateControlsSummary();
-
-// ── mood chips ──
-const moodBar = document.getElementById('moodBar');
-MOODS.forEach(m => {
-  const chip = document.createElement('div');
-  chip.className = 'mood-chip';
-  chip.textContent = m;
-  chip.addEventListener('click', () => {
-    if (activeMood === m) { activeMood = ''; chip.classList.remove('active'); return; }
-    activeMood = m;
-    document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-  });
-  moodBar.appendChild(chip);
-});
-
-// ── comment mode dropdowns ──
-const targetTextarea = document.getElementById('targetContent');
-const clearTextarea = document.getElementById('clearTextarea');
-let activePurpose = 'build_link';
+let activeType = 'build_link';
 let activeStyle = 'resonance';
-
-// Clear textarea button
-function updateClearBtn() {
-  clearTextarea.classList.toggle('visible', targetTextarea.value.length > 0);
-}
-clearTextarea.addEventListener('click', () => {
-  targetTextarea.value = '';
-  updateClearBtn();
-  targetTextarea.focus();
-});
-targetTextarea.addEventListener('input', updateClearBtn);
-
-// Generic dropdown toggle
-function setupCbtn(wrapId, btnId, dropId, onSelect) {
-  const btn = document.getElementById(btnId);
-  const drop = document.getElementById(dropId);
-
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    // Close other drops
-    document.querySelectorAll('.cdrop.open').forEach(d => {
-      if (d !== drop) d.classList.remove('open');
-    });
-    drop.classList.toggle('open');
-  });
-
-  drop.querySelectorAll('.cdrop-opt').forEach(opt => {
-    opt.addEventListener('click', (e) => {
-      e.stopPropagation();
-      drop.querySelectorAll('.cdrop-opt').forEach(o => o.classList.remove('active'));
-      opt.classList.add('active');
-      onSelect(opt.dataset.val, opt.textContent);
-      drop.classList.remove('open');
-    });
-  });
-}
-
-setupCbtn('purposeWrap', 'purposeBtn', 'purposeDrop', (val, label) => {
-  activePurpose = val;
-  document.getElementById('purposeBtn').querySelector('.cbtn-val').textContent = label;
-});
-
-setupCbtn('styleWrap', 'styleBtn', 'styleDrop', (val, label) => {
-  activeStyle = val;
-  document.getElementById('styleBtn').querySelector('.cbtn-val').textContent = label;
-});
-
-// comment-bar tone dropdown (separate from post-mode tone)
-const cToneBtn = document.getElementById('toneBtn');
-const cToneDrop = document.getElementById('toneDrop');
-let activeCommentTone = 'humble';
-
-cToneBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  document.querySelectorAll('.cdrop.open').forEach(d => {
-    if (d !== cToneDrop) d.classList.remove('open');
-  });
-  cToneDrop.classList.toggle('open');
-});
-
-cToneDrop.querySelectorAll('.cdrop-opt').forEach(opt => {
-  opt.addEventListener('click', (e) => {
-    e.stopPropagation();
-    cToneDrop.querySelectorAll('.cdrop-opt').forEach(o => o.classList.remove('active'));
-    opt.classList.add('active');
-    activeCommentTone = opt.dataset.val;
-    cToneBtn.querySelector('.cbtn-val').textContent = opt.textContent;
-    cToneDrop.classList.remove('open');
-  });
-});
-
-// ── chat ──
-const messagesDiv = document.getElementById('messages');
-const msgInput = document.getElementById('msgInput');
-const sendBtn = document.getElementById('sendBtn');
+let activeTone = 'humble';
 let firstMsg = true;
 
+const messagesDiv = document.getElementById('messages');
+const textarea = document.getElementById('targetContent');
+const genBtn = document.getElementById('genBtn');
+const clearBtn = document.getElementById('clearBtn');
+
+function buildMenu(menuEl, options, activeKey, onSelect) {
+  menuEl.innerHTML = '';
+  Object.entries(options).forEach(([key, opt]) => {
+    const div = document.createElement('div');
+    div.className = 'drop-opt' + (key === activeKey ? ' active' : '');
+    div.dataset.key = key;
+    div.textContent = opt.label;
+    div.addEventListener('click', () => {
+      menuEl.querySelectorAll('.drop-opt').forEach(o => o.classList.remove('active'));
+      div.classList.add('active');
+      onSelect(key, opt.label);
+      menuEl.classList.remove('open');
+    });
+    menuEl.appendChild(div);
+  });
+}
+
+function setupDrop(btn, menu) {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.drop-menu.open').forEach(d => {
+      if (d !== menu) d.classList.remove('open');
+    });
+    menu.classList.toggle('open');
+  });
+}
+
+const typeMenu = document.getElementById('typeMenu');
+const styleMenu = document.getElementById('styleMenu');
+const toneMenu = document.getElementById('toneMenu');
+
+buildMenu(typeMenu, DIMS.comment_type.options, activeType, (key, label) => {
+  activeType = key;
+  document.getElementById('typeBtn').querySelector('.dv').textContent = label;
+});
+buildMenu(styleMenu, DIMS.comment_style.options, activeStyle, (key, label) => {
+  activeStyle = key;
+  document.getElementById('styleBtn').querySelector('.dv').textContent = label;
+});
+buildMenu(toneMenu, TONES, activeTone, (key, label) => {
+  activeTone = key;
+  document.getElementById('toneBtn').querySelector('.dv').textContent = label;
+});
+
+setupDrop(document.getElementById('typeBtn'), typeMenu);
+setupDrop(document.getElementById('styleBtn'), styleMenu);
+setupDrop(document.getElementById('toneBtn'), toneMenu);
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('.drop-menu.open').forEach(d => d.classList.remove('open'));
+});
+
+// textarea clear
+function updateClear() { clearBtn.classList.toggle('visible', textarea.value.length > 0); }
+clearBtn.addEventListener('click', () => { textarea.value = ''; updateClear(); textarea.focus(); });
+textarea.addEventListener('input', updateClear);
+
+// messages
 function esc(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function addMessage(text, role, isComment) {
+function addMessage(text, role) {
   if (firstMsg) { messagesDiv.innerHTML = ''; firstMsg = false; }
   const div = document.createElement('div');
   div.className = 'msg ' + role;
@@ -828,52 +241,52 @@ function addMessage(text, role, isComment) {
 
     const copyBtn = document.createElement('button');
     copyBtn.className = 'copy-btn';
-    copyBtn.textContent = isComment ? '复制评论' : '复制文案';
+    copyBtn.textContent = '复制评论';
     copyBtn.addEventListener('click', () => {
       navigator.clipboard.writeText(text);
       copyBtn.textContent = '已复制 ✓';
-      setTimeout(() => copyBtn.textContent = isComment ? '复制评论' : '复制文案', 2000);
+      setTimeout(() => copyBtn.textContent = '复制评论', 2000);
     });
     btns.appendChild(copyBtn);
 
-    if (isComment) {
-      const styleBtn = document.createElement('button');
-      styleBtn.className = 'style-btn';
-      styleBtn.textContent = '换风格';
-      styleBtn.addEventListener('click', () => {
-        cycleStyle();
-        regenerateComment();
-      });
-      btns.appendChild(styleBtn);
-    }
+    const styleBtn = document.createElement('button');
+    styleBtn.className = 'style-btn';
+    styleBtn.textContent = '换风格';
+    styleBtn.addEventListener('click', () => {
+      cycleStyle();
+      generate();
+    });
+    btns.appendChild(styleBtn);
 
     div.appendChild(btns);
   }
-
   messagesDiv.appendChild(div);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
-// Style cycle for comment mode
 function cycleStyle() {
-  const vals = ['resonance', 'supplement', 'question', 'casual', 'professional', 'restrained'];
-  const cur = activeStyle;
-  const idx = vals.indexOf(cur);
-  activeStyle = vals[(idx + 1) % vals.length];
-  // Update dropdown UI
-  const drop = document.getElementById('styleDrop');
-  drop.querySelectorAll('.cdrop-opt').forEach(o => {
-    const isActive = o.dataset.val === activeStyle;
-    o.classList.toggle('active', isActive);
+  const keys = Object.keys(DIMS.comment_style.options);
+  const idx = keys.indexOf(activeStyle);
+  activeStyle = keys[(idx + 1) % keys.length];
+  const label = DIMS.comment_style.options[activeStyle].label;
+  document.getElementById('styleBtn').querySelector('.dv').textContent = label;
+  styleMenu.querySelectorAll('.drop-opt').forEach(o => {
+    o.classList.toggle('active', o.dataset.key === activeStyle);
   });
-  document.getElementById('styleBtn').querySelector('.cbtn-val').textContent =
-    drop.querySelector('.cdrop-opt.active')?.textContent || '共鸣';
 }
 
-async function regenerateComment() {
+async function generate() {
+  const content = textarea.value.trim();
+  if (!content) return;
+
+  genBtn.disabled = true;
+
+  const preview = content.length > 60 ? content.slice(0, 60) + '...' : content;
+  addMessage(preview, 'user');
+
   const loadingDiv = document.createElement('div');
   loadingDiv.className = 'msg ai loading';
-  loadingDiv.textContent = '换风格中...';
+  loadingDiv.textContent = '思考中...';
   messagesDiv.appendChild(loadingDiv);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
@@ -882,127 +295,30 @@ async function regenerateComment() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        mode: 'comment',
-        comment_type: activePurpose,
+        comment_type: activeType,
         comment_style: activeStyle,
-        tone: activeCommentTone,
-        message: lastUserMsg,
-        target_content: targetTextarea.value.trim(),
+        tone: activeTone,
+        target_content: content,
       }),
     });
     const data = await resp.json();
     loadingDiv.remove();
     if (data.error) {
-      addMessage('❌ ' + data.error, 'ai error');
+      addMessage('❌ ' + data.error, 'error');
     } else {
-      addMessage(data.reply, 'ai', true);
+      addMessage(data.reply, 'ai');
     }
   } catch (err) {
     loadingDiv.remove();
-    addMessage('❌ 网络错误', 'ai error');
+    addMessage('❌ 网络错误，请检查服务器是否运行', 'error');
   }
+  genBtn.disabled = false;
 }
 
-async function send() {
-  const isComment = (active.mode || 'post') === 'comment';
-  const targetContent = targetTextarea.value.trim();
-
-  if (isComment) {
-    // Comment mode: send compact payload
-    if (!targetContent) return;
-
-    lastUserMsg = targetContent;
-    const generateBtn = document.getElementById('generateBtn');
-    generateBtn.disabled = true;
-
-    addMessage(targetContent, 'user');
-
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'msg ai loading';
-    loadingDiv.textContent = '思考中...';
-    messagesDiv.appendChild(loadingDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-    try {
-      const resp = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mode: 'comment',
-          comment_type: activePurpose,
-          comment_style: activeStyle,
-          tone: activeCommentTone,
-          message: targetContent,
-          target_content: targetContent,
-        }),
-      });
-      const data = await resp.json();
-      loadingDiv.remove();
-      if (data.error) {
-        addMessage('❌ ' + data.error, 'ai error');
-      } else {
-        addMessage(data.reply, 'ai', true);
-      }
-    } catch (err) {
-      loadingDiv.remove();
-      addMessage('❌ 网络错误，请检查服务器是否运行', 'ai error');
-    }
-
-    generateBtn.disabled = false;
-  } else {
-    // Post mode: original logic
-    const msg = msgInput.value.trim();
-    if (!msg) return;
-
-    lastUserMsg = msg;
-    msgInput.value = '';
-    msgInput.disabled = true;
-    sendBtn.disabled = true;
-
-    addMessage(msg, 'user');
-
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'msg ai loading';
-    loadingDiv.textContent = '思考中...';
-    messagesDiv.appendChild(loadingDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-    try {
-      const resp = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          persona: active.persona,
-          scenario: active.scenario,
-          purpose: active.purpose,
-          rhythm: active.rhythm,
-          mode: 'post',
-          mood: activeMood,
-          tone: activeTone,
-          message: msg,
-        }),
-      });
-      const data = await resp.json();
-      loadingDiv.remove();
-      if (data.error) {
-        addMessage('❌ ' + data.error, 'ai error');
-      } else {
-        addMessage(data.reply, 'ai', false);
-      }
-    } catch (err) {
-      loadingDiv.remove();
-      addMessage('❌ 网络错误，请检查服务器是否运行', 'ai error');
-    }
-
-    msgInput.disabled = false;
-    sendBtn.disabled = false;
-    msgInput.focus();
-  }
-}
-
-sendBtn.addEventListener('click', send);
-document.getElementById('generateBtn').addEventListener('click', send);
-msgInput.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+genBtn.addEventListener('click', generate);
+textarea.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); generate(); }
+});
 </script>
 </body>
 </html>

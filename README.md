@@ -2,40 +2,31 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-An AI-powered comment generator for Chinese short-video platforms. Helps content creators craft authentic, high-quality comments to build genuine connections — one comment at a time.
+An AI-powered comment generator for Chinese short-video platforms. Paste a creator's content, get a comment that builds genuine connection.
 
-AI 驱动的短视频评论区文案工具。粘贴博主内容，一键生成高质量评论，用于创作者之间的主动建联。**每一句评论，都是一颗抛出去的锚。**
+AI 驱动的短视频评论区建联工具。粘贴博主内容，一键生成高质量评论。**每一句评论，都是一颗抛出去的锚。**
 
 ---
 
 ## What It Does · 核心功能
 
-**Comment Mode · 评论区模式**（核心）
-- Paste a creator's short-video content → generate a comment that gets noticed
-- 3 comment intents: Networking (建联), Self-Warming (暖场), Alt-Account (小号助评)
-- 6 tone styles: Professional, Resonance, Supplement, Casual, Restrained, Question
-- Perfect for building connections with KOLs in your niche
-
-**Post Mode · 主帖模式**
-- Generate WeChat Moments (朋友圈) posts
-- 4 personas, 4 scenarios, 4 purposes, 4 time-of-day rhythms
+- Paste content → generate a comment that gets noticed
+- 3 intents: 建联 (Networking) / 暖场 (Self-Warming) / 小号 (Alt-Account)
+- 6 styles: 共鸣 / 补充 / 提问 / 轻松 / 专业 / 克制
+- 4 tones: 谦逊 / 轻松 / 调皮 / 温柔
+- One flow, zero distractions
 
 ---
 
 ## Quick Start · 快速开始
 
 ```bash
-# Install dependencies
 pip install -r requirements.txt
-
-# Set your API key
 echo "DEEPSEEK_API_KEY=your-key-here" > .env
-
-# Start server
 python server.py
 ```
 
-Open `http://127.0.0.1:5000`.
+Open `http://127.0.0.1:5001`.
 
 ---
 
