@@ -1,4 +1,4 @@
-# Contributing to Comment Connect
+# Contributing to Anchor
 
 ## Ways to Contribute
 
@@ -10,7 +10,7 @@
 ## Development Setup
 
 ```bash
-git clone https://github.com/keatemorishita-svg/comment-connect.git
+git clone https://github.com/keatemorishita-svg/anchor.git
 cd comment-connect
 pip install -r requirements.txt
 echo "DEEPSEEK_API_KEY=your-key" > .env

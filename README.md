@@ -1,10 +1,10 @@
-# Comment Connect · 评论区神器
+# Anchor · 评论区神器
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-An AI-powered comment generator for Chinese short-video platforms. Helps content creators and operators craft authentic, high-quality comments to build genuine connections with other creators.
+An AI-powered comment generator for Chinese short-video platforms. Helps content creators craft authentic, high-quality comments to build genuine connections — one comment at a time.
 
-AI 驱动的短视频评论区文案工具。粘贴博主内容，一键生成高质量评论，用于创作者之间的主动建联。
+AI 驱动的短视频评论区文案工具。粘贴博主内容，一键生成高质量评论，用于创作者之间的主动建联。**每一句评论，都是一颗抛出去的锚。**
 
 ---
 
@@ -69,7 +69,7 @@ Your DeepSeek API key stays in your local `.env` file (gitignored). All content 
 ## Project Structure · 项目结构
 
 ```
-comment-connect/
+anchor/
 ├── server.py          # Flask backend, prompt assembly, API proxy
 ├── templates/
 │   └── index.html     # Single-page UI (inline CSS + JS)
