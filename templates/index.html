@@ -167,6 +167,9 @@ let activeType = 'build_link';
 let activeStyle = 'resonance';
 let activeTone = 'humble';
 let firstMsg = true;
+let fetchedContent = '';    // URL-fetched content
+let lastUserInput = '';     // raw user input (URL or text)
+const URL_RE = /^https?:\/\/\S+$/i;
 
 const messagesDiv = document.getElementById('messages');
 const textarea = document.getElementById('targetContent');
@@ -282,16 +285,58 @@ function cycleStyle() {
 }
 
 async function generate(showUser = true) {
-  const content = textarea.value.trim();
-  if (!content) return;
+  const rawInput = textarea.value.trim();
+  if (!rawInput) return;
 
   genBtn.disabled = true;
 
   if (showUser) {
-    const preview = content.length > 60 ? content.slice(0, 60) + '...' : content;
+    lastUserInput = rawInput;
+    const isUrl = URL_RE.test(rawInput);
+    const preview = isUrl ? '🔗 ' + rawInput.slice(0, 50) + '...' : (rawInput.length > 60 ? rawInput.slice(0, 60) + '...' : rawInput);
     addMessage(preview, 'user');
+
+    // If it's a URL, fetch content first
+    if (isUrl) {
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'msg ai loading';
+      loadingDiv.textContent = '提取内容...';
+      messagesDiv.appendChild(loadingDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      try {
+        const fetchResp = await fetch('/api/fetch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: rawInput }),
+        });
+        const fetchData = await fetchResp.json();
+        loadingDiv.remove();
+
+        if (fetchData.error) {
+          addMessage('❌ ' + fetchData.error, 'error');
+          genBtn.disabled = false;
+          return;
+        }
+
+        fetchedContent = fetchData.content;
+        // Show content summary
+        const label = fetchData.type === 'youtube' ? '视频' : fetchData.type === 'bilibili' ? 'B站' : '文章';
+        const titlePreview = fetchData.title ? `「${fetchData.title.slice(0, 40)}」` : '';
+        const lenInfo = '约 ' + fetchedContent.length + ' 字';
+        addMessage(label + titlePreview + '  ' + lenInfo, 'ai');
+      } catch (err) {
+        loadingDiv.remove();
+        addMessage('❌ 内容提取失败，请直接粘贴正文', 'error');
+        genBtn.disabled = false;
+        return;
+      }
+    } else {
+      fetchedContent = rawInput;
+    }
   }
 
+  const targetContent = fetchedContent || rawInput;
   const loadingDiv = document.createElement('div');
   loadingDiv.className = 'msg ai loading';
   loadingDiv.textContent = '思考中...';
@@ -306,7 +351,7 @@ async function generate(showUser = true) {
         comment_type: activeType,
         comment_style: activeStyle,
         tone: activeTone,
-        target_content: content,
+        target_content: targetContent,
       }),
     });
     const data = await resp.json();

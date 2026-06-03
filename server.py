@@ -4,10 +4,13 @@ Serves the comment UI and proxies requests to DeepSeek API.
 One file, one command: python server.py
 """
 import os
+import re
 import json
 import flask
 import requests
 from pathlib import Path
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 
 app = flask.Flask(__name__, template_folder="templates")
 
@@ -268,6 +271,204 @@ def analyze():
         return flask.jsonify({"error": "DeepSeek API 超时，请重试"}), 504
     except requests.exceptions.RequestException as e:
         return flask.jsonify({"error": f"API 请求失败: {str(e)}"}), 502
+
+
+# ── URL Fetch ─────────────────────────────────────────────────────────
+
+URL_PATTERN = re.compile(r'https?://\S+', re.IGNORECASE)
+
+
+def detect_url_type(url):
+    domain = urlparse(url).netloc.lower()
+    if 'bilibili.com' in domain:
+        return 'bilibili'
+    if 'youtube.com' in domain or 'youtu.be' in domain:
+        return 'youtube'
+    return 'article'
+
+
+def fetch_article(url):
+    """Fetch and extract text from a blog/article URL."""
+    resp = requests.get(url, timeout=15, headers={
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }, proxies={"http": None, "https": None})
+    resp.raise_for_status()
+    resp.encoding = resp.apparent_encoding or 'utf-8'
+
+    soup = BeautifulSoup(resp.text, 'lxml')
+    # Remove noise
+    for tag in soup(['script', 'style', 'nav', 'footer', 'header', 'aside']):
+        tag.decompose()
+
+    title = soup.title.string.strip() if soup.title else ''
+    # Try to find main content
+    body = soup.find('article') or soup.find(class_=re.compile('content|article|post|entry')) or soup.body
+    text = body.get_text(separator='\n', strip=True) if body else soup.get_text(separator='\n', strip=True)
+
+    # Clean up: remove excessive blank lines, limit length
+    lines = [l.strip() for l in text.split('\n') if l.strip()]
+    text = '\n'.join(lines)
+    if len(text) > 8000:
+        text = text[:8000] + '\n...(内容已截断)'
+
+    return {'type': 'article', 'title': title, 'content': text, 'source': url}
+
+
+def fetch_bilibili(url):
+    """Fetch B站 video title, description, and subtitles."""
+    # Extract bvid from URL
+    m = re.search(r'/video/(BV[\w]+)', url)
+    if not m:
+        return {'error': '无法识别 B站视频链接'}
+    bvid = m.group(1)
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Referer': 'https://www.bilibili.com/',
+    }
+    proxies = {"http": None, "https": None}
+
+    # Get video info
+    info_resp = requests.get(
+        f'https://api.bilibili.com/x/web-interface/view?bvid={bvid}',
+        headers=headers, timeout=15, proxies=proxies
+    )
+    info = info_resp.json().get('data', {})
+
+    title = info.get('title', '')
+    desc = info.get('desc', '')
+    cid = info.get('cid', 0)
+
+    parts = []
+    if title:
+        parts.append(f"标题：{title}")
+    if desc:
+        parts.append(f"简介：{desc}")
+
+    # Try to get subtitles
+    if cid:
+        try:
+            sub_resp = requests.get(
+                f'https://api.bilibili.com/x/player/v2?bvid={bvid}&cid={cid}',
+                headers=headers, timeout=10, proxies=proxies
+            )
+            sub_data = sub_resp.json().get('data', {})
+            subtitle = sub_data.get('subtitle', {}).get('subtitles', [])
+            if subtitle:
+                sub_url = subtitle[0].get('subtitle_url', '')
+                if sub_url and sub_url.startswith('//'):
+                    sub_url = 'https:' + sub_url
+                if sub_url:
+                    sub_resp = requests.get(sub_url, headers=headers, timeout=10, proxies=proxies)
+                    sub_json = sub_resp.json()
+                    sub_lines = [item.get('content', '') for item in sub_json.get('body', [])]
+                    sub_text = '\n'.join(sub_lines)
+                    if len(sub_text) > 6000:
+                        sub_text = sub_text[:6000] + '\n...(字幕已截断)'
+                    parts.append(f"字幕：\n{sub_text}")
+        except Exception:
+            pass
+
+    content = '\n\n'.join(parts)
+    if not content.strip():
+        # Fallback: fetch page and extract text
+        try:
+            page_resp = requests.get(url, headers=headers, timeout=15, proxies=proxies)
+            soup = BeautifulSoup(page_resp.text, 'lxml')
+            meta_desc = soup.find('meta', attrs={'name': 'description'})
+            if meta_desc:
+                content = f"标题：{title}\n描述：{meta_desc.get('content', '')}"
+        except Exception:
+            content = f"标题：{title}"
+
+    return {'type': 'bilibili', 'title': title, 'content': content, 'source': url}
+
+
+def fetch_youtube(url):
+    """Fetch YouTube video title, description, and captions."""
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
+    proxies = {"http": None, "https": None}
+
+    parts = []
+
+    # Get page info
+    try:
+        resp = requests.get(url, headers=headers, timeout=15, proxies=proxies)
+        soup = BeautifulSoup(resp.text, 'lxml')
+
+        title_tag = soup.find('title')
+        title = title_tag.string.strip().replace(' - YouTube', '') if title_tag else ''
+        if title:
+            parts.append(f"标题：{title}")
+
+        # Extract description from meta
+        desc_tag = soup.find('meta', attrs={'name': 'description'})
+        if desc_tag:
+            desc = desc_tag.get('content', '')
+            if desc:
+                parts.append(f"简介：{desc}")
+    except Exception:
+        pass
+
+    # Get captions via youtube-transcript-api
+    try:
+        from youtube_transcript_api import YouTubeTranscriptApi
+        video_id = None
+        if 'v=' in url:
+            video_id = url.split('v=')[1].split('&')[0]
+        elif 'youtu.be/' in url:
+            video_id = url.split('youtu.be/')[1].split('?')[0]
+
+        if video_id:
+            transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['zh-Hans', 'zh', 'en'])
+            lines = [item.get('text', '') for item in transcript]
+            sub_text = '\n'.join(lines)
+            if len(sub_text) > 6000:
+                sub_text = sub_text[:6000] + '\n...(字幕已截断)'
+            parts.append(f"字幕：\n{sub_text}")
+    except Exception:
+        pass
+
+    content = '\n\n'.join(parts)
+    if not content.strip():
+        return {'error': '无法获取 YouTube 视频内容'}
+
+    return {'type': 'youtube', 'title': title if 'title' in dir() else '', 'content': content, 'source': url}
+
+
+@app.route("/api/fetch", methods=["POST"])
+def fetch_url():
+    """Fetch content from a URL — article, B站 video, or YouTube video."""
+    data = flask.request.get_json()
+    url = data.get("url", "").strip()
+    if not url:
+        return flask.jsonify({"error": "请提供链接"}), 400
+
+    try:
+        url_type = detect_url_type(url)
+        if url_type == 'bilibili':
+            result = fetch_bilibili(url)
+        elif url_type == 'youtube':
+            result = fetch_youtube(url)
+        else:
+            result = fetch_article(url)
+
+        if 'error' in result:
+            return flask.jsonify({"error": result['error']}), 400
+
+        return flask.jsonify({
+            "type": result['type'],
+            "title": result.get('title', ''),
+            "content": result['content'],
+            "source": result['source'],
+        })
+
+    except requests.exceptions.Timeout:
+        return flask.jsonify({"error": "抓取超时，请直接粘贴正文"}), 504
+    except Exception as e:
+        return flask.jsonify({"error": f"抓取失败: {str(e)}"}), 502
 
 
 if __name__ == "__main__":
