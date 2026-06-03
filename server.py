@@ -381,7 +381,8 @@ def fetch_bilibili(url):
         except Exception:
             content = f"标题：{title}"
 
-    return {'type': 'bilibili', 'title': title, 'content': content, 'source': url}
+    has_subtitle = any('字幕' in p for p in parts)
+    return {'type': 'bilibili', 'title': title, 'content': content, 'source': url, 'has_subtitle': has_subtitle}
 
 
 def fetch_youtube(url):
@@ -435,7 +436,8 @@ def fetch_youtube(url):
     if not content.strip():
         return {'error': '无法获取 YouTube 视频内容'}
 
-    return {'type': 'youtube', 'title': title if 'title' in dir() else '', 'content': content, 'source': url}
+    has_subtitle = any('字幕' in p for p in parts)
+    return {'type': 'youtube', 'title': title if 'title' in dir() else '', 'content': content, 'source': url, 'has_subtitle': has_subtitle}
 
 
 @app.route("/api/fetch", methods=["POST"])

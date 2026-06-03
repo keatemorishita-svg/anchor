@@ -321,10 +321,11 @@ async function generate(showUser = true) {
 
         fetchedContent = fetchData.content;
         // Show content summary
-        const label = fetchData.type === 'youtube' ? '视频' : fetchData.type === 'bilibili' ? 'B站' : '文章';
+        const label = fetchData.type === 'youtube' ? 'YouTube' : fetchData.type === 'bilibili' ? 'B站' : '文章';
         const titlePreview = fetchData.title ? `「${fetchData.title.slice(0, 40)}」` : '';
         const lenInfo = '约 ' + fetchedContent.length + ' 字';
-        addMessage(label + titlePreview + '  ' + lenInfo, 'ai');
+        const subNote = (fetchData.has_subtitle === false) ? ' ⚠ 无字幕，仅基于标题生成' : '';
+        addMessage(label + titlePreview + '  ' + lenInfo + subNote, 'ai');
       } catch (err) {
         loadingDiv.remove();
         addMessage('❌ 内容提取失败，请直接粘贴正文', 'error');
