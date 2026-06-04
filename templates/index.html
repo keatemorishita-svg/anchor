@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -131,6 +131,10 @@
 <div class="header">
   <span class="logo">Anchor</span>
   <span class="badge">评论区建联</span>
+  <select id="providerSelect" style="margin-left:auto;background:var(--bg-card);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:4px;font-size:12px;font-family:inherit;">
+    <option value="deepseek">DeepSeek</option>
+    <option value="openai">OpenAI</option>
+  </select>
 </div>
 
 <div class="messages" id="messages">
@@ -353,6 +357,7 @@ async function generate(showUser = true) {
         comment_style: activeStyle,
         tone: activeTone,
         target_content: targetContent,
+        provider: document.getElementById('providerSelect').value,
       }),
     });
     const data = await resp.json();

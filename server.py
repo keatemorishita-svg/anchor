@@ -25,7 +25,20 @@ if _ENV_PATH.exists():
                 os.environ.setdefault(k.strip(), v.strip())
 
 DEEPSEEK_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
-DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
+OPENAI_KEY = os.environ.get("OPENAI_API_KEY", "")
+API_PROVIDER = os.environ.get("API_PROVIDER", "deepseek")  # deepseek | openai
+
+API_URLS = {
+    "deepseek": "https://api.deepseek.com/chat/completions",
+    "openai": "https://api.openai.com/v1/chat/completions",
+}
+
+def get_api_config(provider=None):
+    """Resolve API key and URL. Falls back: provider arg > env > deepseek."""
+    p = provider or API_PROVIDER
+    if p == "openai":
+        return OPENAI_KEY, API_URLS["openai"], "gpt-4o-mini"
+    return DEEPSEEK_KEY, API_URLS["deepseek"], "deepseek-chat"
 
 # ── Comment-only dimensions ───────────────────────────────────────────
 
@@ -163,10 +176,14 @@ def index():
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
-    if not DEEPSEEK_KEY:
-        return flask.jsonify({"error": "服务器未配置 DeepSeek API Key"}), 500
-
     data = flask.request.get_json()
+    provider = data.get("provider", API_PROVIDER)
+    api_key, api_url, model = get_api_config(provider)
+
+    if not api_key:
+        provider_name = "OpenAI" if provider == "openai" else "DeepSeek"
+        return flask.jsonify({"error": f"服务器未配置 {provider_name} API Key"}), 500
+
     comment_type_id = data.get("comment_type", "build_link")
     comment_style_id = data.get("comment_style", "resonance")
     tone_id = data.get("tone", "humble")
@@ -184,13 +201,13 @@ def chat():
 
     try:
         resp = requests.post(
-            DEEPSEEK_URL,
+            api_url,
             headers={
-                "Authorization": f"Bearer {DEEPSEEK_KEY}",
+                "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
             },
             json={
-                "model": "deepseek-chat",
+                "model": model,
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": "请根据以上内容生成一条评论"},
@@ -204,10 +221,10 @@ def chat():
         resp.raise_for_status()
         body = resp.json()
         reply = body["choices"][0]["message"]["content"]
-        return flask.jsonify({"reply": reply})
+        return flask.jsonify({"reply": reply, "provider": provider, "model": model})
 
     except requests.exceptions.Timeout:
-        return flask.jsonify({"error": "DeepSeek API 超时，请重试"}), 504
+        return flask.jsonify({"error": f"{provider} API 超时，请重试"}), 504
     except requests.exceptions.RequestException as e:
         return flask.jsonify({"error": f"API 请求失败: {str(e)}"}), 502
 
